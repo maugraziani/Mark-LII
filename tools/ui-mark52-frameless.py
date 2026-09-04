@@ -21,7 +21,17 @@ def main() -> int:
     original = UI.read_text(encoding="utf-8")
     text = original
 
-    # 1) Remove a moldura/título nativo do Windows.
+    # 1) Aumenta somente o tamanho inicial em 15%.
+    # 980x700 -> 1127x805. O tamanho mínimo permanece igual.
+    text = replace_once(
+        text,
+        "_DEFAULT_W, _DEFAULT_H = 980, 700\n",
+        "_DEFAULT_W, _DEFAULT_H = 1127, 805\n",
+        "default window size",
+    )
+
+    # 2) Remove a moldura/título nativo do Windows para aparência de app.
+    # A identidade interna/configurada continua exatamente como estava.
     text = replace_once(
         text,
         '        self.setWindowTitle(f"{_display} — MARK LII")\n        self.setMinimumSize(_MIN_W, _MIN_H)\n',
@@ -31,23 +41,13 @@ def main() -> int:
         "frameless window",
     )
 
-    # 2) O nome visual passa a ser JARVIS MARK 52 sem alterar a identidade
-    # falada/configurada do assistente (self._assistant_name continua intacto).
+    # 3) SOMENTE o título visível no cabeçalho passa para JARVIS MARK 52.
+    # Não altera _display, HudCanvas, prompt, voz, memória ou assistant_name.
     text = replace_once(
         text,
-        '        _display = self._assistant_name.upper()\n',
-        '        _display = ("JARVIS MARK 52"\n'
-        '                    if self._assistant_name.upper() in ("JARVIS", "J.A.R.V.I.S")\n'
-        '                    else self._assistant_name.upper())\n',
-        "display name",
-    )
-
-    # 3) O subtítulo tradicional continua válido para a apresentação Mark 52.
-    text = replace_once(
-        text,
-        '                     if _disp in ("JARVIS", "J.A.R.V.I.S")\n',
-        '                     if _disp in ("JARVIS", "J.A.R.V.I.S", "JARVIS MARK 52")\n',
-        "header subtitle",
+        '        self._title_lbl = QLabel(_disp)\n',
+        '        self._title_lbl = QLabel("JARVIS MARK 52")\n',
+        "header display title",
     )
 
     # 4) Cabeçalho interno recebe minimizar/fechar; sem isso uma janela sem
@@ -79,8 +79,9 @@ def main() -> int:
 
     print("UI_MARK52_OK")
     print("- janela: sem moldura superior nativa")
-    print("- título visual: JARVIS MARK 52")
-    print("- identidade falada/configurada: preservada")
+    print("- tamanho inicial: 1127 x 805 (+15%)")
+    print("- título do cabeçalho: JARVIS MARK 52")
+    print("- demais referências/identidade: JARVIS preservado")
     print("- cabeçalho: minimizar e fechar adicionados")
     print("- cabeçalho: arrastar para mover a janela")
     print("- ui.py: compilação OK")
